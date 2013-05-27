@@ -10,6 +10,8 @@ local scene = storyboard.newScene()
 -- include Corona's "widget" library
 local widget = require "widget"
 
+-- 画面サイズの幅と高さを取得
+local screenW, screenH, halfW, halfH = display.contentWidth, display.contentHeight, display.contentWidth*0.5, display.contentHeight*0.5
 --------------------------------------------
 
 -- forward declarations and other locals
@@ -17,20 +19,10 @@ local playBtn
 
 -- 'onRelease' event listener for playBtn
 local function onPlayBtnRelease()
-	
 	-- go to level1.lua scene
 	storyboard.gotoScene( "level1", "fade", 500 )
-	
 	return true	-- indicates successful touch
 end
-
------------------------------------------------------------------------------------------
--- BEGINNING OF YOUR IMPLEMENTATION
--- 
--- NOTE: Code outside of listener functions (below) will only be executed once,
---		 unless storyboard.removeScene() is called.
--- 
------------------------------------------------------------------------------------------
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
@@ -39,8 +31,17 @@ function scene:createScene( event )
 	-- display a background image
 	local background = display.newImageRect( "background.jpg", display.contentWidth, display.contentHeight )
 	background:setReferencePoint( display.TopLeftReferencePoint )
-	background.x, background.y = 0, 0
+	background.x, background.y = -400, 0
+	background:scale(2,2)
 	
+	function animate(event)
+		--オブジェクトの移動
+		background.x = background.x + 1.5
+		if(background.x > -50) then
+			background.x = -400
+		end
+	end
+
 	-- create/position logo/title image on upper-half of the screen
 	local titleLogo = display.newImageRect( "logo.png", 264, 42 )
 	titleLogo:setReferencePoint( display.CenterReferencePoint )
@@ -70,16 +71,14 @@ end
 function scene:enterScene( event )
 	local group = self.view
 	
-	-- INSERT code here (e.g. start timers, load audio, start listeners, etc.)
-	
+	Runtime:addEventListener("enterFrame", animate)
 end
 
 -- Called when scene is about to move offscreen:
 function scene:exitScene( event )
 	local group = self.view
-	
-	-- INSERT code here (e.g. stop timers, remove listenets, unload sounds, etc.)
-	
+	Runtime:removeEventListener("enterFrame", animate) --animate終了
+	storyboard.removeScene('menu') --シーンの情報を削除します． 2週目に響くので	
 end
 
 -- If scene's view is removed, scene:destroyScene() will be called just prior to:

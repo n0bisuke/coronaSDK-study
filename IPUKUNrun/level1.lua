@@ -27,23 +27,62 @@ function onTouch(event)
 	storyboard.gotoScene("clear",{ effect = "slideLeft", time = 500, params = { currentScore = 100}})
 end
 
+local gFlag = 0
+function buttonTouch(event)--重力を反転させる
+	if (gFlag == 0) then
+		physics.setGravity(0,-9.8)
+		gFlag = 1
+	else 
+		physics.setGravity(0,9.8)
+		gFlag = 0
+	end
+end
+
+local limitTime = 100
+function enemy(event)
+	limitTime = limitTime - 1
+	if(limitTime == 95) then
+		local enemy2 = display.newRect(50,200,40,40)
+	end
+	if(enemy2 == display.newRect(50,200,40,40))then
+		enemy2.x = enemy2.x + 0.5
+	end
+end
+
 -- シーンが作成される際に呼び出される関数
 function scene:createScene( event )
 	local group = self.view
 
-	-- 背景を作成
-	local background = display.newRect( 0, 0, screenW, screenH )
-	background:setFillColor( 128 )
+	-- 背景を設定
+	local background = display.newImageRect( "background.jpg", display.contentWidth, display.contentHeight )
+	background:setReferencePoint( display.TopLeftReferencePoint )
+	background.x, background.y = -400, 0
+	background:scale(2,2)
 	
+	function animate(event)
+		--オブジェクトの移動
+		background.x = background.x + 1.5
+		if(background.x > -50) then
+			background.x = -400
+		end
+	end
+	
+	---天井を設定
+	local ceiling = display.newRect(0,0,screenW,1)
+	ceiling:setFillColor(255)
+	physics.addBody( ceiling, "static", { friction=0.3} )
+
 	-----落下物を作成
 	local crate = display.newImageRect( "ipukun.png", 90, 90 )
-	crate.x, crate.y = halfW, 0
-	crate.rotation = 15
-
+	crate.x, crate.y = halfW*1.5, 10
+	crate:scale(0.5,0.5)
+	--crate.rotation = 15
 	-- 落下物に物理属性を追加
 	physics.addBody( crate, { density=1.0, friction=0.3, bounce=0.3 } )
+	-- 落下物にタッチイベントを追加
+	crate:addEventListener("touch",onTouch)	
 	
-	-- create a grass object and add physics (with custom shape)
+	-- 地面
 	local grass = display.newImageRect( "grass.png", screenW, 82 )
 	grass:setReferencePoint( display.BottomLeftReferencePoint )
 	grass.x, grass.y = 0, display.contentHeight
@@ -51,7 +90,7 @@ function scene:createScene( event )
 	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
 	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
 	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
-	crate:addEventListener("touch",onTouch)
+	grass:addEventListener("touch",buttonTouch)
 
 	-- all display objects must be inserted into group
 	group:insert( background )
@@ -64,6 +103,7 @@ function scene:enterScene( event )
 	local group = self.view
 	--アニメーション用
 	Runtime:addEventListener("enterFrame", animate)
+	timer.performWithDelay(1000, enemy, 0)	
 end
 
 -- Called when scene is about to move offscreen:
