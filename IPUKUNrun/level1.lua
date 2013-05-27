@@ -17,12 +17,13 @@ function animate(event)
 	if(scrollText.x > screenW) then
 		scrollText.x = -10
 	end
-	scrollText.text = "ヨコに移動します    "..scrollText.x
+	scrollText.text = "ヨコに移動します"
 end
 
 --タッチされたら呼び出される
 function onTouch(event)
 	--storyboard.variableName = scrollText.x
+	scrollText:removeSelf()
 	storyboard.gotoScene("clear",{ effect = "slideLeft", time = 500, params = { currentScore = 100}})
 end
 
@@ -62,22 +63,22 @@ end
 function scene:enterScene( event )
 	local group = self.view
 	--アニメーション用
-	--Runtime:addEventListener("enterFrame", animate)
+	Runtime:addEventListener("enterFrame", animate)
 end
 
 -- Called when scene is about to move offscreen:
 function scene:exitScene( event )
 	local group = self.view
-		scrollText:removeSelf() --
-	--Runtime:removeEventListener("enterFrame", animate) --animate終了
+	Runtime:removeEventListener("enterFrame", animate) --animate終了
 	physics.stop()
+	storyboard.removeScene('level1') --シーンの情報を削除します． 2週目に響くので
 end
 
 -- If scene's view is removed, scene:destroyScene() will be called just prior to:
 function scene:destroyScene( event )
 	local group = self.view
 	
-	storyboard.removeScene('level1')
+	--storyboard.removeScene('level1')
 	package.loaded[physics] = nil
 	physics = nil
 end
