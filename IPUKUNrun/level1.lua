@@ -4,28 +4,29 @@ local scene = storyboard.newScene()
 
 --重力を使う
 local physics = require "physics"
-physics.start()
-physics.pause()
+physics.start(); --physics.pause()
 
 -- 画面サイズの幅と高さを取得
 local screenW, screenH, halfW, halfH = display.contentWidth, display.contentHeight, display.contentWidth*0.5, display.contentHeight*0.5
 
---local text2 = display.newText("時間内に水量を減らせ" , 0, -40, native.systemFont, 20) 
---local function animate()
+local scrollText = display.newText("ヨコに移動します" , 0, 0, native.systemFont, 20)
+scrollText:setTextColor(0)
+function animate(event)
 	--オブジェクトの移動
---	text2.x = text2.x + 0.5
---	if(text2.x > _W) then
---		text2.x = -10
---	end
---end
+	scrollText.x = scrollText.x + 0.5
+	if(scrollText.x > screenW) then
+		scrollText.x = -10
+	end
+	scrollText.text = "ヨコに移動します    "..scrollText.x
+end
 
 --タッチされたら呼び出される
 function onTouch(event)
-	storyboard.gotoScene("clear","fade",500)
+	--storyboard.variableName = scrollText.x
+	storyboard.gotoScene("clear",{ effect = "slideLeft", time = 500, params = { currentScore = 100}})
 end
 
-
--- Called when the scene's view does not exist:
+-- シーンが作成される際に呼び出される関数
 function scene:createScene( event )
 	local group = self.view
 
@@ -35,10 +36,10 @@ function scene:createScene( event )
 	
 	-----落下物を作成
 	local crate = display.newImageRect( "ipukun.png", 90, 90 )
-	crate.x, crate.y = 160, -100
+	crate.x, crate.y = halfW, 0
 	crate.rotation = 15
-	
-	-- add physics to the crate
+
+	-- 落下物に物理属性を追加
 	physics.addBody( crate, { density=1.0, friction=0.3, bounce=0.3 } )
 	
 	-- create a grass object and add physics (with custom shape)
@@ -49,7 +50,6 @@ function scene:createScene( event )
 	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
 	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
 	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
-	
 	crate:addEventListener("touch",onTouch)
 
 	-- all display objects must be inserted into group
@@ -68,7 +68,8 @@ end
 -- Called when scene is about to move offscreen:
 function scene:exitScene( event )
 	local group = self.view
-	
+		scrollText:removeSelf() --
+	--Runtime:removeEventListener("enterFrame", animate) --animate終了
 	physics.stop()
 end
 
@@ -76,6 +77,7 @@ end
 function scene:destroyScene( event )
 	local group = self.view
 	
+	storyboard.removeScene('level1')
 	package.loaded[physics] = nil
 	physics = nil
 end

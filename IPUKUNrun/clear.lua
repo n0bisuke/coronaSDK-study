@@ -5,6 +5,8 @@ local scene = storyboard.newScene()
 -- 画面サイズの幅と高さを取得
 local screenW, screenH, halfW, halfH = display.contentWidth, display.contentHeight, display.contentWidth*0.5, display.contentHeight*0.5
 
+local currentScore
+
 --シーンがタッチされた時に呼び出される
 function onTouch(event)
 	storyboard.gotoScene("menu", "fade", 500)
@@ -16,7 +18,7 @@ function scene:createScene( event )
 
 	-- 背景作成
 	local bg = display.newRect( 0, 0, screenW, screenH )
-	bg:setFillColor(255)
+	bg:setFillColor(160)
 	
 	local text = display.newText("クリアー", 0,0, native.systemFont,32)
 	text:setTextColor(0)
@@ -26,10 +28,13 @@ function scene:createScene( event )
 	group:addEventListener("touch", onTouch)
 	group:insert(bg)
 	group:insert(text)
+	print( "Got currentScore = " .. 1)
 end
 
 -- Called immediately after scene has moved onscreen:
 function scene:enterScene( event )
+	currentScore = event.params.currentScore
+	print( "Got currentScore = " .. currentScore )
 end
 
 -- Called when scene is about to move offscreen:
