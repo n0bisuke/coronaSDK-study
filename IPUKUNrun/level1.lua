@@ -8,16 +8,29 @@ physics.start(); --physics.pause()
 
 -- 画面サイズの幅と高さを取得
 local screenW, screenH, halfW, halfH = display.contentWidth, display.contentHeight, display.contentWidth*0.5, display.contentHeight*0.5
+local limitTime = 100 --制限時間
+local crate = display.newImageRect( "kuma.png", 90, 90 )
+
+--敵を作る
+function createEnemy(event)
+	local group = display.newGroup()
+	group:insert(display.newRect(screenW*0.8,math.random(300),4,4))
+end
+
+--時間経過を管理
+function timeCheck(event)
+	limitTime = limitTime - 1
+end
 
 local scrollText = display.newText("ヨコに移動します" , 0, 0, native.systemFont, 20)
-scrollText:setTextColor(0)
+scrollText:setTextColor(255)
 function animate(event)
 	--オブジェクトの移動
 	scrollText.x = scrollText.x + 0.5
 	if(scrollText.x > screenW) then
 		scrollText.x = -10
 	end
-	scrollText.text = "ヨコに移動します"
+	scrollText.text = "ヨコに移動します"..limitTime
 end
 
 --タッチされたら呼び出される
@@ -38,16 +51,37 @@ function buttonTouch(event)--重力を反転させる
 	end
 end
 
-local limitTime = 100
+
 function enemy(event)
 	limitTime = limitTime - 1
 	if(limitTime == 95) then
-		local enemy2 = display.newRect(50,200,40,40)
+		enemyObj = display.newRect(50,200,40,40)
+		physics.addBody(enemyObj)
 	end
-	if(enemy2 == display.newRect(50,200,40,40))then
-		enemy2.x = enemy2.x + 0.5
+	if(enemyObj == display.newRect(50,200,40,40))then
+		enemyObj.x = enemyObj.x - 0.5
 	end
 end
+
+--右に移動
+function moveRight(event)
+	if event.phase == "moved" then
+		crate.x = crate.x + 10
+	end
+end
+
+--上に移動
+function moveUp(event)
+	--crate.y = crate.y - 50
+	physics.setGravity(0,-9.8)
+end
+
+--下に移動
+function moveDown(event)
+	--crate.y = crate.y - 50
+	physics.setGravity(0,9.8)
+end
+
 
 -- シーンが作成される際に呼び出される関数
 function scene:createScene( event )
@@ -59,38 +93,51 @@ function scene:createScene( event )
 	background.x, background.y = -400, 0
 	background:scale(2,2)
 	
-	function animate(event)
-		--オブジェクトの移動
-		background.x = background.x + 1.5
-		if(background.x > -50) then
-			background.x = -400
+	function animateBg(event)
+		local speed = -3
+		local startPoint = screenW*0.1-100
+		background.x = background.x + speed
+		if(background.x < (startPoint - screenW)) then
+			background.x = startPoint
 		end
 	end
-	
+
 	---天井を設定
-	local ceiling = display.newRect(0,0,screenW,1)
+	local ceiling = display.newRect(-50,0,screenW,1)
 	ceiling:setFillColor(255)
 	physics.addBody( ceiling, "static", { friction=0.3} )
 
 	-----落下物を作成
-	local crate = display.newImageRect( "ipukun.png", 90, 90 )
-	crate.x, crate.y = halfW*1.5, 10
-	crate:scale(0.5,0.5)
-	--crate.rotation = 15
-	-- 落下物に物理属性を追加
+	crate.x, crate.y = 0, 10
+	--crate:scale(0.5,0.5)
+	crate.rotation = 70
+	-- 落下物に物理属性2追加
 	physics.addBody( crate, { density=1.0, friction=0.3, bounce=0.3 } )
 	-- 落下物にタッチイベントを追加
 	crate:addEventListener("touch",onTouch)	
+
+	------------キーボード-------
+	local keyboard = display.newGroup()
+	keyboard:insert(display.newRect(screenW*0.4,50,10,10)) --右
+	keyboard:insert(display.newRect(screenW*0.3,50,10,10)) --左
+	keyboard:insert(display.newRect(screenW*0.35,30,10,10)) --上
+	keyboard:insert(display.newRect(screenW*0.35,70,10,10)) --下	
+	keyboard[1]:addEventListener("touch",moveRight)
+	--keyboard[2]:addEventListener("tap",moveLeft)
+	keyboard[3]:addEventListener("touch",moveUp)
+	keyboard[4]:addEventListener("touch",moveDown)
 	
+
 	-- 地面
 	local grass = display.newImageRect( "grass.png", screenW, 82 )
 	grass:setReferencePoint( display.BottomLeftReferencePoint )
-	grass.x, grass.y = 0, display.contentHeight
+	grass.x, grass.y = -50, display.contentHeight
+	grass:scale(2,1)
 	
 	-- define a shape that's slightly shorter than image bounds (set draw mode to "hybrid" or "debug" to see)
-	local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
-	physics.addBody( grass, "static", { friction=0.3, shape=grassShape } )
-	grass:addEventListener("touch",buttonTouch)
+	--local grassShape = { -halfW,-34, halfW,-34, halfW,34, -halfW,34 }
+	physics.addBody( grass, "static", { friction=0.3} )
+	grass:addEventListener("tap",buttonTouch)
 
 	-- all display objects must be inserted into group
 	group:insert( background )
@@ -103,7 +150,10 @@ function scene:enterScene( event )
 	local group = self.view
 	--アニメーション用
 	Runtime:addEventListener("enterFrame", animate)
-	timer.performWithDelay(1000, enemy, 0)	
+	Runtime:addEventListener("enterFrame", animateBg)
+	--timer.performWithDelay(1000, enemy, 0)
+	timer.performWithDelay(1000, createEnemy, 0)
+	timer.performWithDelay(1000, timeCheck, 0)
 end
 
 -- Called when scene is about to move offscreen:

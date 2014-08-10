@@ -28,7 +28,6 @@ function scene:createScene( event )
 	group:addEventListener("touch", onTouch)
 	group:insert(bg)
 	group:insert(text)
-	print( "Got currentScore = " .. 1)
 end
 
 -- Called immediately after scene has moved onscreen:

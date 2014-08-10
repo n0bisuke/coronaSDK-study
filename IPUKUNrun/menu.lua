@@ -27,18 +27,19 @@ end
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
 	local group = self.view
-
 	-- display a background image
 	local background = display.newImageRect( "background.jpg", display.contentWidth, display.contentHeight )
 	background:setReferencePoint( display.TopLeftReferencePoint )
-	background.x, background.y = -400, 0
+	background.x, background.y = startPoint, 0
 	background:scale(2,2)
 	
+	--左側にスクロール	
 	function animate(event)
-		--オブジェクトの移動
-		background.x = background.x + 1.5
-		if(background.x > -50) then
-			background.x = -400
+		local speed = -3
+		local startPoint = screenW*0.1-100
+		background.x = background.x + speed
+		if(background.x < (startPoint - screenW)) then
+			background.x = startPoint
 		end
 	end
 
@@ -70,7 +71,6 @@ end
 -- Called immediately after scene has moved onscreen:
 function scene:enterScene( event )
 	local group = self.view
-	
 	Runtime:addEventListener("enterFrame", animate)
 end
 
